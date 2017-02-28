@@ -5,6 +5,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# LANGUAGE RankNTypes #-}
 module Lib where
 
 data Fix (fs :: [* -> *]) where
@@ -12,6 +13,9 @@ data Fix (fs :: [* -> *]) where
 
 inn :: (Mem f fs, Functor f) => f (Fix fs) -> Fix fs
 inn = In witness
+
+prj :: (fs <: fs, Mem f fs) => Fix fs -> Maybe (f (Fix fs))
+prj = match $ Just >:: fromFunction (\pos -> const Nothing)
 
 data Elem (f :: * -> *) (fs :: [* -> *]) where
     Here :: Elem f (f ': fs)
@@ -30,7 +34,7 @@ data Matches (fs :: [* -> *]) (a :: *) (b :: *) where
     Void :: Matches '[] a b
     (:::) :: Functor f => (f a -> b) -> Matches fs a b -> Matches (f ': fs) a b
 
-infixr 5 :::
+infixr 6 :::
 
 extractAt :: Elem f fs -> Matches fs a b -> (f a -> b)
 extractAt Here (f:::_) = f
@@ -109,3 +113,12 @@ overrideAt (There pos) g (f ::: fs) = f ::: overrideAt pos g fs
 (>::) = overrideAt witness
 
 infixr 6 >::
+
+fromFunctionWith :: (forall f. Functor f => Elem f fs -> f a -> b)
+                 -> Sub gs fs -> Matches gs a b
+fromFunctionWith f SNil = Void
+fromFunctionWith f (SCons pos ss) = f pos ::: fromFunctionWith f ss
+
+fromFunction :: (fs <: fs) => (forall f. Functor f => Elem f fs -> f a -> b) -> Matches fs a b
+fromFunction f = fromFunctionWith f srep
+
