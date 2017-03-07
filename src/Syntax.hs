@@ -2,8 +2,10 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE PatternSynonyms #-}
 {-# LANGUAGE StandaloneDeriving #-}
 {-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE ViewPatterns #-}
 module Syntax where
 
 import Lib
@@ -130,14 +132,13 @@ trMul (Mul e1 e2)
                                           (trans $ mul e12 e22))
     | otherwise = trans $ mul (trans e1) (trans e2)
 
+pattern NumP n <- (prj -> Just (N n))
+
 sub1 :: Exp -> Exp
-sub1 e = let Just (N n) = prj e
-         in if n > 0 then val (n-1) else val (n+1)
+sub1 (NumP n) = if n > 0 then val (n-1) else val (n+1)
 
 isZero :: Exp -> Bool
-isZero e = let Just (N n) = prj e
-           in n == 0
-
+isZero (NumP n) = n == 0
 
 isVal :: Exp -> Bool
 isVal = match $ (\(N _) -> True)
