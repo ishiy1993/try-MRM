@@ -87,11 +87,23 @@ showAdd (Add n1 n2) = "(" ++ n1 ++ " + " ++ n2 ++ ")"
 showMul :: Mul String -> String
 showMul (Mul n1 n2) = "(" ++ n1 ++ " * " ++ n2 ++ ")"
 
-trans :: Exp -> Exp
-trans = fold tr
+class Trans fs where
+    trAlg :: Matches fs Exp Exp
 
-tr :: Algebras '[Val, Add, Mul] Exp
-tr = trVal ::: trAdd ::: trMul ::: Void
+instance Trans ('[]) where
+    trAlg = Void
+
+instance Trans fs => Trans (Val ': fs) where
+    trAlg = trVal ::: trAlg
+
+instance Trans fs => Trans (Add ': fs) where
+    trAlg = trAdd ::: trAlg
+
+instance Trans fs => Trans (Mul ': fs) where
+    trAlg = trMul ::: trAlg
+
+trans :: Trans fs => Fix fs -> Exp
+trans = fold trAlg
 
 trVal :: Val Exp -> Exp
 trVal (N n) = val n
