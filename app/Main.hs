@@ -5,8 +5,8 @@ import Syntax
 
 main :: IO ()
 main = do
-    let exp1' = trans exp1
-        exp2' = trans exp2
+    let exp1' = desugar exp1
+        exp2' = desugar exp2
     putStr "exp1  = "
     putStrLn $ pshow exp1
     putStr "      = "
