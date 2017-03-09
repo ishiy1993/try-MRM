@@ -152,6 +152,15 @@ isAdd = match $ (\(N _) -> False)
             ::: (\(Mul _ _) ->  False)
             ::: Void
 
+shrink :: (Mem Val fs, Mem Add fs) => Exp -> Fix fs
+shrink = fold $ (\(N n) -> val n)
+            ::: (\(Add e1 e2) -> add e1 e2)
+            ::: (\(Mul e1 e2) -> undefined)
+            ::: Void
+
+desugar :: Trans fs => Fix fs -> Fix '[Val, Add]
+desugar = shrink . trans
+
 -- 必要なもの: 関数
 -- f :: Mul (Fix '[Val, Add]) -> Fix '[Val, Add]
 -- これを実装するにはかけ算の非再帰的定義が必要
