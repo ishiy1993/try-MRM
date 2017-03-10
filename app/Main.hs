@@ -2,6 +2,9 @@ module Main where
 
 import Lib
 import Syntax
+import Eval
+import PrettyShow
+import Trans0
 
 main :: IO ()
 main = do
